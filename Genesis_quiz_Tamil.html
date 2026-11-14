@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamil Bible Quiz</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #3f74b9, #ede9fe);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quiz-container {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4338ca;
+            font-size: 27px;
+            margin-top: 0;
+        }
+
+        .intro {
+            text-align: center;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #participant-name {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        #participant-name:focus {
+            outline: 2px solid #6366f1;
+            border-color: #6366f1;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+            color: #555;
+            margin: 20px 0 12px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: #dbeafe;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #4f46e5;
+            transition: width 0.3s ease;
+        }
+
+        #question {
+            font-size: 21px;
+            line-height: 1.5;
+            color: #222;
+            margin-top: 25px;
+            white-space: pre-line;
+        }
+
+        #options {
+            display: grid;
+            gap: 12px;
+            margin: 22px 0;
+        }
+
+        .option {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            background: white;
+            color: #222;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .option:hover:not(:disabled) {
+            border-color: #6366f1;
+            background: #eef2ff;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #16a34a;
+        }
+
+        .option.wrong {
+            background: #fee2e2;
+            border-color: #dc2626;
+        }
+
+        .option:disabled {
+            cursor: default;
+            opacity: 1;
+        }
+
+        #feedback {
+            min-height: 24px;
+            line-height: 1.5;
+            font-weight: bold;
+            margin: 12px 0;
+        }
+
+        .main-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #4f46e5;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-button:hover:not(:disabled) { background: #3730a3; }
+
+        .main-button:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
+        }
+
+        #result { text-align: center; }
+
+        #final-score {
+            font-size: 23px;
+            font-weight: bold;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .hidden { display: none !important; }
+
+        .result-mode {
+            padding: 22px;
+            margin: 20px 0;
+            border-radius: 18px;
+            text-align: center;
+            animation: popIn 0.6s ease;
+        }
+
+        .result-mode[hidden] { display: none; }
+
+        .happy-mode {
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            color: #14532d;
+        }
+
+        .sad-mode {
+            background: linear-gradient(135deg, #dbeafe, #e9d5ff);
+            color: #3730a3;
+        }
+
+        .result-emoji {
+            font-size: 65px;
+            margin: 10px;
+        }
+
+        .result-mode h2 {
+            font-size: 26px;
+            margin: 10px 0;
+            color: inherit;
+        }
+
+        .result-mode p {
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        #submission-status {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .quiz-container { padding: 20px; }
+            h1 { font-size: 23px; }
+            #question { font-size: 18px; }
+            .option { font-size: 15px; padding: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+<main class="quiz-container">
+
+    <!-- REGISTRATION PAGE -->
+    <section id="register">
+        <h1>ஆதியாகமம் வினாடி வினா</h1>
+        <p class="intro">
+            Welcome to the Tamil Bible Quiz!<br>
+            Please enter your name before starting.
+        </p>
+
+        <form id="register-form">
+            <label for="participant-name">Participant Name / பங்கேற்பாளர் பெயர்</label>
+            <input
+                type="text"
+                id="participant-name"
+                placeholder="Enter your full name"
+                required
+                maxlength="100"
+                autocomplete="name"
+            >
+            <button type="submit" class="main-button">Start Quiz / வினாடி வினாவைத் தொடங்கு</button>
+        </form>
+    </section>
+
+    <!-- QUIZ AREA -->
+    <section id="quiz" class="hidden">
+        <h1>Bible Champions (ஆதியாகமம்)</h1>
+
+        <div class="quiz-info">
+            <span id="question-count">Question 1 of 78</span>
+            <span id="score">Score: 0</span>
+        </div>
+
+        <div class="progress-track">
+            <div id="progress-bar"></div>
+        </div>
+
+        <h2 id="question">Loading question...</h2>
+        <div id="options"></div>
+        <p id="feedback" aria-live="polite"></p>
+
+        <button id="next-btn" class="main-button" disabled>Next Question</button>
+    </section>
+
+    <!-- FINAL RESULT AREA -->
+    <section id="result" class="hidden" aria-live="polite">
+        <h2>வினாடி வினா முடிந்தது!</h2>
+        <p id="final-score"></p>
+        <p id="message"></p>
+
+        <div id="resultMode" class="result-mode" hidden>
+            <div id="resultEmoji" class="result-emoji"></div>
+            <h2 id="resultTitle"></h2>
+            <p id="resultMessage"></p>
+        </div>
+
+        <p id="submission-status"></p>
+
+        <button id="restart-btn" class="main-button">மீண்டும் விளையாடு</button>
+    </section>
+
+</main>
+
+<script>
+    /*
+      GOOGLE SHEETS SETUP:
+      After deploying your Google Apps Script as a Web app,
+      paste the URL ending in /exec between the quotation marks below.
+    */
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1gdokO8NP6teWiheZJz4m4yhhswSHR8AK58RhRt2nq3HB3s5wwMfUsgvgx_tw7MvLzA/exec";
+
+    async function saveQuizResult(name, score, total) {
+        const percentage = Math.round((score / total) * 100);
+
+        const formData = new URLSearchParams({
+            name: name,
+            score: String(score),
+            total: String(total),
+            percentage: String(percentage)
+        });
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: formData
+            });
+
+            document.getElementById("submission-status").textContent =
+                "Your result has been submitted. Thank you!";
+
+        } catch (error) {
+            document.getElementById("submission-status").textContent =
+                "Submission failed. Please check your internet connection.";
+            console.error(error);
+        }
+    }
+
+    // QUESTIONS AND ANSWERS
+    const questions = [
+        {
+            question: "தேவன் எத்தனாவது நாளில் தாம் உண்டாக்கின எல்லாவற்றையும் பார்த்தார், அது மிகவும் நன்றாயிருந்தது?",
+            options: ["ஆறாம் நாள்", "ஏழாம் நாள்", "ஐந்தாம் நாள்", "நான்காம் நாள்"],
+            answer: 0
+        },
+        {
+            question: "எந்த தேசத்தின் பொன் நல்லது. அவ்விடத்திலே பிதோலாகும், கோமேதகக்கல்லும் உண்டு?",
+            options: ["ஆவிலா", "எத்தியோப்பியா", "அசீரியா", "பாபிலோன்"],
+            answer: 0
+        },
+        {
+            question: "ஜீவனுள்ளோருக்கெல்லாம் தாயானவள் யார்?",
+            options: ["சாராள்", "ஏவாள்", "ரெபேக்காள்", "ஆதாள்"],
+            answer: 1
+        },
+        {
+            question: "தேவனாகிய கர்த்தர் ஆதாமுக்கும் அவன் மனைவிக்கும் என்ன உடைகளை உண்டாக்கி அவர்களுக்கு உடுத்தினார்?",
+            options: ["பட்டு", "தோல்", "பருத்தி", "இலை"],
+            answer: 1
+        },
+        {
+            question: "எந்த வேளையிலே தோட்டத்தில் உலாவுகிற தேவனாகிய கர்த்தருடைய சத்தத்தை அவர்கள் கேட்டார்கள்?",
+            options: ["பகலில் உஷ்ண", "காலையில் உஷ்ண", "இரவில் குளிர்ச்சியான", "பகலில் குளிர்ச்சியான"],
+            answer: 3
+        },
+        {
+            question: "கர்த்தர் ஏழாம் நாளை என்ன செய்தார்?",
+            options: ["ஆசீர்வதித்தார்", "பரிசுத்தமாக்கினார்", "சபித்தார்", "அ மற்றும் ஆ"],
+            answer: 3
+        },
+        {
+            question: "யார் பிறந்தபொழுது கர்த்தருடைய நாமத்தைத் தொழுதுகொள்ள ஆரம்பித்தார்கள்?",
+            options: ["சேத்", "ஆதாம்", "ஏனோக்கு", "ஏனோஸ்"],
+            answer: 3
+        },
+        {
+            question: "என்ன செய்தால் மேன்மை இல்லையோ? என்று தேவன் காயீனிடம் கூறினார்?",
+            options: ["தீமை", "நல்லது", "நன்மை", "கெட்டது"],
+            answer: 2
+        },
+        {
+            question: "யார் கர்த்தரை நோக்கி எனக்கு இட்ட தண்டனை என்னால் சகிக்கமுடியாது என்றான்?",
+            options: ["ஆபேல்", "லாமேக்கு", "ஆதாம்", "காயீன்"],
+            answer: 3
+        },
+        {
+            question: "யார் மந்தை மேய்க்கிறவர்களுக்கும் தகப்பனானான்?",
+            options: ["யூபால்", "ஆபேல்", "யாபால்", "யாவான்"],
+            answer: 2
+        },
+        {
+            question: "பூமியிலிருந்து எது என்னை நோக்கிக் கூப்பிடுகிறது என்றார்?",
+            options: ["இரத்தத்தின் சத்தம்", "இரைச்சலின் சத்தம்", "பேசுகிற சத்தம்", "கூக்குரலின் சத்தம்"],
+            answer: 0
+        },
+        {
+            question: "கர்த்தர் சபித்த பூமியிலே நமக்கு உண்டான வேலையிலும், நம்முடைய கைகளின் பிரயாசத்திலும், இவன் நம்மைத் தேற்றுவான் என்று சொல்லி, அவனுக்கு ______ என்று பேரிட்டான்.",
+            options: ["ஆபிரகாம்", "நோவா", "ஆதாம்", "சேத்"],
+            answer: 1
+        },
+        {
+            question: "இந்தச் சந்ததியில் உன்னை எனக்கு முன்பாக நீதிமானாகக் கண்டேன் என்று தேவன் யாரிடம் கூறினார்?",
+            options: ["சேத்", "ஆபிரகாம்", "நோவா", "ஆதாம்"],
+            answer: 2
+        },
+        {
+            question: "இன்னும் எத்தனை நாள் சென்றபின், நாற்பதுநாள் இரவும் பகலும் பூமியின்மேல் மழையை வருஷிக்கப்பண்ணுவேன் என்றார்?",
+            options: ["ஏழு", "நூற்றைம்பது", "பதினைந்து", "நூறு"],
+            answer: 0
+        },
+        {
+            question: "எது பெருகி, பேழையைக் கிளம்பப்பண்ணிற்று; அது பூமிக்குமேல் மிதந்தது?",
+            options: ["நீர்", "தண்ணீர்", "ஜலம்", "காற்று"],
+            answer: 2
+        },
+        {
+            question: "மூடப்பட்ட மலைகளுக்கு மேலாய்ப் எத்தனை உயரத்திற்கு ஜலம் பெருகிற்று?",
+            options: ["பதினைந்து", "ஐந்து", "ஐம்பது", "ஏழு"],
+            answer: 0
+        },
+        {
+            question: "ஜலம் பூமியின்மேல் எத்தனை நாள் மிகவும் பிரவாகித்துக்கொண்டிருந்தது?",
+            options: ["பதினைந்து", "ஐம்பது", "நூற்றைம்பது", "ஏழு"],
+            answer: 2
+        },
+        {
+            question: "எது ஜலம் வற்றிப்போகும்வரைக்கும் போகிறதும் வருகிறதுமாய் இருந்தது?",
+            options: ["குயில்", "புறா", "சேவல்", "காகம்"],
+            answer: 3
+        },
+        {
+            question: "பூமியின்மீதெங்கும் ஜலம் இருந்தபடியால், எது தன் உள்ளங்கால் வைத்து, இளைப்பாற இடம் காணாமல், திரும்பிப் பேழையிலே அவனிடத்தில் வந்தது?",
+            options: ["காகம்", "புறா", "சேவல்", "குயில்"],
+            answer: 1
+        },
+        {
+            question: "எப்பொழுது பூமி காய்ந்திருந்தது?",
+            options: ["பத்தாம் மாதம் முதல் தேதி", "ஏழாம் மாதம் இருபத்தேழாம் தேதி", "இரண்டாம் மாதம் இருபத்தேழாம் தேதி", "முதலாம் மாதம் முதல் தேதி"],
+            answer: 2
+        },
+        {
+            question: "மனூஷனுக்கு உயிர் எதிலே இருக்கிறது?",
+            options: ["மாம்சம்", "இரத்தம்", "இதயம்", "தோல்"],
+            answer: 1
+        },
+        {
+            question: "உடன்படிக்கையின் அடையாளமாக எதை மேகத்தின் மேல் வைத்தேன் என்றார்?",
+            options: ["வானவில்", "வில்", "நட்சத்திரம்", "நிலா"],
+            answer: 1
+        },
+        {
+            question: "கானுக்கு தகப்பன் யார்?",
+            options: ["நோவா", "லாமேக்கு", "காம்", "சேம்"],
+            answer: 2
+        },
+        {
+            question: "யார் பயிரிடுகிறவனாகி, திராட்சத்தோட்டத்தை நாட்டினான்?",
+            options: ["நோவா", "லாமேக்கு", "காம்", "சேம்"],
+            answer: 0
+        },
+        {
+            question: "யார் சபிக்கப்பட்டவன்? யார் சகோதரரிடத்தில் அடிமைகளுக்கு அடிமையாயிருப்பான் என்றான்?",
+            options: ["நோவா", "லாமேக்கு", "காம்", "சேம்"],
+            answer: 2
+        },
+        {
+            question: "யாருடைய தேவனாகிய கர்த்தருக்கு ஸ்தோத்திரம் உண்டாவதாக?",
+            options: ["நோவா", "லாமேக்கு", "காம்", "சேம்"],
+            answer: 3
+        },
+        {
+            question: "யாரை தேவன் விர்த்தியாக்குவார்? யார் சேமுடைய கூடாரங்களில் குடியிருப்பான்?",
+            options: ["சேம்", "காம்", "யாப்பேத்", "இவை மூன்றும்"],
+            answer: 2
+        },
+        {
+            question: "யார் பூமியிலே பராக்கிரமசாலியானான்? யார் கர்த்தருக்கு முன்பாகப் பலத்த வேட்டைக்காரனாயிருந்தான்?",
+            options: ["கூஷ்", "நிம்ரோத்", "காம்", "யாப்பேத்"],
+            answer: 1
+        },
+        {
+            question: "பெரிய பட்டணம் எது?",
+            options: ["நோத்", "ரெசேன்", "ஏனோக்கு", "நினிவே"],
+            answer: 1
+        },
+        {
+            question: "யாருடைய நாட்களில் பூமி பகுக்கப்பட்டது?",
+            options: ["பேலேகு", "நிம்ரோத்", "அசூர்", "கூஷ்"],
+            answer: 0
+        },
+        {
+            question: "மனுபுத்திரர் கட்டுகிற நகரத்தையும் கோபுரத்தையும் பார்க்கிறதற்குக் யார் இறங்கினார்?",
+            options: ["தேவன்", "பிதா", "கர்த்தர்", "இயேசு"],
+            answer: 2
+        },
+        {
+            question: "யார் வனாந்தரத்திலே குடியிருந்து, வில்வித்தையிலே வல்லவனானான்?",
+            options: ["ஈசாக்கு", "காயீன்", "இஸ்மவேல்", "நிம்ரோத்"],
+            answer: 2
+        },
+        {
+            question: "பூமியெங்கும் வழங்கின பாஷையைக் கர்த்தர் அவ்விடத்தில் தாறுமாறாக்கினபடியால், அதின்பேர் _______ என்னப்பட்டது.",
+            options: ["பெத்தேல்", "தாறுமாறு", "பாபேல்", "பெயர்செபா"],
+            answer: 2
+        },
+        {
+            question: "தேராகு யாரைப் பெற்றான்?",
+            options: ["ஆபிராம்", "ஆரான்", "நகோர்", "இவை மூன்றும்"],
+            answer: 3
+        },
+        {
+            question: "தேராகுடைய எத்தனை வருஷம் வாழ்ந்தான்?",
+            options: ["300", "210", "205", "200"],
+            answer: 2
+        },
+        {
+            question: "நீ உன் தேசத்தையும், உன் இனத்தையும், உன் தகப்பனுடைய வீட்டையும் விட்டுப் புறப்பட்டு, நான் உனக்குக் காண்பிக்கும் தேசத்துக்குப் போ என்று யாரிடம் கூறினார்?",
+            options: ["ஆபிராம்", "லோத்து", "ஈசாக்கு", "இஸ்மவேல்"],
+            answer: 0
+        },
+        {
+            question: "கர்த்தர் பார்வோனையும், அவன் வீட்டாரையும் எதினால் வாதித்தார்?",
+            options: ["மகா வாதைகளால்", "வியாதியினால்", "நோயினால்", "கொள்ளை நோயினால்"],
+            answer: 0
+        },
+        {
+            question: "யாருடைய மந்தைமேய்ப்பருக்கும் யாருடைய மந்தைமேய்ப்பருக்கும் வாக்குவாதம் உண்டாயிற்று?",
+            options: ["ஆரான், நாகோர்", "ஆரான் இஸ்மவேல்", "ஆபிராம், ஈசாக்கு", "ஆபிராம், லோத்து"],
+            answer: 3
+        },
+        {
+            question: "கர்த்தர் சோதோமையும் கொமோராவையும் அழிக்குமுன்னே, எதற்கு போம் வழிமட்டும் கர்த்தருடைய தோட்டத்தைப்போலவும் எகிப்து தேசத்தைப்போலவும் இருந்தது?",
+            options: ["பெத்தேல்", "சோவார்", "நோத்", "ஏதேன்"],
+            answer: 1
+        },
+        {
+            question: "எந்த ஜனங்கள் பொல்லாதவர்களும் கர்த்தருக்கு முன்பாக மகா பாவிகளுமாய் இருந்தார்கள்?",
+            options: ["சோதோம்", "கொமோரா", "கானான்", "எகிப்து"],
+            answer: 0
+        },
+        {
+            question: "ஆபிராம் தன் வீட்டிலே பிறந்த கைபடிந்தவர்களாகிய எத்தனை ஆட்களுக்கும் ஆயுதம் தரிப்பித்து, தாண் என்னும் ஊர்மட்டும் அவர்களைத் தொடர்ந்து சென்றான்?",
+            options: ["247", "350", "215", "318"],
+            answer: 3
+        },
+        {
+            question: "சாலேமின் ராஜாவாவும், உன்னதமான தேவனுடைய ஆசாரியனாயிருந்தது யார்?",
+            options: ["தேவன்", "ஆபிராம்", "மெல்கிசேதேக்கு", "தாவீது"],
+            answer: 2
+        },
+        {
+            question: "மெல்கிசேதேக்கு ஆபிராமுக்கு என்ன கொண்டுவந்து கொடுத்தான்?",
+            options: ["அப்பம்", "திராட்சரசம்", "தசமபாகம்", "அ மற்றும் ஆ"],
+            answer: 3
+        },
+        {
+            question: "சோதோம் ராஜா ஆபிராமிடம் என்ன கேட்டான்?",
+            options: ["அப்பம்", "தசமபாகம்", "பொருட்கள்", "ஜனங்கள்"],
+            answer: 3
+        },
+        {
+            question: "ஆபிராம் மெல்கிசேதேக்குக்கு என்ன கொடுத்தான்?",
+            options: ["காணிக்கை", "தசமபாகம்", "திராட்சரசம்", "அப்பம்"],
+            answer: 1
+        },
+        {
+            question: "ஆபிராம் வீட்டு விசாரணைக்கர்த்தனாய் இருந்தது யார்?",
+            options: ["லோத்து", "ஆபிராம்", "எலியேசர்", "இஸ்மவேல்"],
+            answer: 2
+        },
+        {
+            question: "எலியேசர் எந்த ஊரான்?",
+            options: ["எகிப்து", "கானான்", "இஸ்ரவேல்", "தமஸ்கு"],
+            answer: 3
+        },
+        {
+            question: "ஆபிராம் எவைகளை துண்டிக்கவில்லை?",
+            options: ["பட்சிகளை", "மிருகங்களை", "பறவைகளை", "பலிகளை"],
+            answer: 0
+        },
+        {
+            question: "ஆபிராமின் சந்ததியார் எத்தனை வருஷம் உபத்திரவப்படுவார்கள்?",
+            options: ["நானூறு (400)", "ஐந்நூறு (500)", "முந்நூறு (300)", "இருநூறு (200)"],
+            answer: 0
+        },
+        {
+            question: "எந்த தலைமுறையிலே அவர்கள் இவ்விடத்துக்கு திரும்ப வருவார்கள்?",
+            options: ["இரண்டாம்", "மூன்றாம்", "நாலாம்", "ஐந்தாம்"],
+            answer: 2
+        },
+        {
+            question: "யாருடைய அக்கிரமம் இன்னும் நிறைவாக வில்லை?",
+            options: ["கானானியர்", "எமோரியர்", "சோதோம்", "கொமோரா"],
+            answer: 1
+        },
+        {
+            question: "ஆகார் எந்த தேசத்தாள்?",
+            options: ["எகிப்து", "கானான்", "இஸ்ரவேல்", "மீதியான்"],
+            answer: 0
+        },
+        {
+            question: "ஆகார் யாருடைய அடிமைப்பெண்?",
+            options: ["ஏவாள்", "ஆதாள்", "சாராள்", "சில்லாள்"],
+            answer: 2
+        },
+        {
+            question: "கர்த்தருடைய தூதனானவர் அவளை வனாந்தரத்திலே சூருக்குப்போகிற வழியருகே இருக்கிற ______ கண்டார்.",
+            options: ["வாசலண்டயில்", "துரவண்டையில்", "நீரூற்றண்டையில்", "கிணற்றண்டையில்"],
+            answer: 2
+        },
+        {
+            question: "கர்த்தர் உன் அங்கலாய்ப்பைக் கேட்டபடியினால், அவனுக்கு _____ என்று பேரிடுவாயாக.",
+            options: ["ஈசாக்கு", "நோவா", "இஸ்மவேல்", "ஏனோஸ்"],
+            answer: 2
+        },
+        {
+            question: "நீர் என்னைக் காண்கின்ற தேவன் என்று பேரிட்டது யார்?",
+            options: ["ஏவாள்", "ஆதாம்", "ஆகார்", "ஆபிரகாம்"],
+            answer: 2
+        },
+        {
+            question: "ஆபிராம் எத்தனை வயதானபோது கர்த்தர் ஆபிராமுக்குத் தரிசினமானார்?",
+            options: ["எழுபத்து ஏழு", "எண்பத்தாறு", "தொண்ணூற்றொன்பது", "நூறு"],
+            answer: 2
+        },
+        {
+            question: "தேவன் எந்த தேசத்தை ஆபிரகாமுக்கும் அவன் சந்ததிக்கும் சுதந்திரமாக கொடுப்பேன் என்றார்?",
+            options: ["இஸ்ரவேல்", "கானான்", "எகிப்து", "மீதியான்"],
+            answer: 1
+        },
+        {
+            question: "யார் பன்னிரண்டு பிரபுக்களைப் பெறுவான்? யாரைப் பெரிய ஜாதியாக்குவேன்?",
+            options: ["ஆபிரகாம்", "ஈசாக்கு", "நோவா", "இஸ்மவேல்"],
+            answer: 3
+        },
+        {
+            question: "ஆபிரகாம் யாருக்காக விண்ணப்பம்பண்ணினான்?",
+            options: ["ஈசாக்கு", "சாராள்", "லோத்து", "இஸ்மவேல்"],
+            answer: 3
+        },
+        {
+            question: "நான் நகைக்கவில்லை என்று மறுத்தது யார்?",
+            options: ["ஏவாள்", "ஆகார்", "சாராள்", "ஆபிரகாம்"],
+            answer: 2
+        },
+        {
+            question: "பின்னிட்டு பார்த்து உப்புத்தூண் ஆனது யார்?",
+            options: ["ஆகார்", "சாராள்", "லோத்து", "லோத்தின் மனைவி"],
+            answer: 3
+        },
+        {
+            question: "உன் ஜீவன் தப்ப ஓடிப்போ, பின்னிட்டுப் பாராதே என்று யாரிடம் சொல்லப்பட்டது?",
+            options: ["ஆபிரகாம்", "சாராள்", "லோத்து", "இஸ்மவேல்"],
+            answer: 2
+        },
+        {
+            question: "எத்தனை தூதர்கள் சோதமுக்கு வந்தார்கள்?",
+            options: ["இரண்டு", "மூன்று", "நான்கு", "ஐந்து"],
+            answer: 0
+        },
+        {
+            question: "சின்ன ஊர் எது?",
+            options: ["சோவார்", "கொமோரா", "கானான்", "சோதோம்"],
+            answer: 0
+        },
+        {
+            question: "தேவன் யாரை நினைத்து லோத்து தப்பிப்போகும்படி அனுப்பி விட்டார்?",
+            options: ["இஸ்மவேல்", "சாராள்", "ஆபிரகாம்", "ஆதாம்"],
+            answer: 2
+        },
+        {
+            question: "மோவாபியருக்கு தகப்பன் யார்?",
+            options: ["ஆபிரகாம்", "லோத்து", "மோவாப்", "அம்மோன்"],
+            answer: 2
+        },
+        {
+            question: "அம்மோன் புத்திரருக்குத் தகப்பன் யார்?",
+            options: ["லோத்து", "நோவா", "மோவாப்", "பென்னம்மி"],
+            answer: 3
+        },
+        {
+            question: "உன் புத்திரனும் உன் ஏகசுதனும் உன் நேசகுமாரனுமாகிய ஈசாக்கை நீ இப்பொழுது அழைத்துக்கொண்டு, ________ தேசத்துக்குப் போய், அங்கே நான் உனக்குக் குறிக்கும் மலைகள் ஒன்றின்மேல் அவனைத் தகனபலியாகப் பலியிடு என்றார்.",
+            options: ["மோரியா", "சிநெயார்", "சோவார்", "காரானூர்"],
+            answer: 0
+        },
+        {
+            question: "எத்தனாவது நாளில் ஆபிரகாம் தன் கண்களை ஏறெடுத்துப்பார்த்து, தூரத்திலே அந்த இடத்தைக் கண்டான்.",
+            options: ["இரண்டு", "மூன்று", "நான்கு", "ஐந்து"],
+            answer: 1
+        },
+        {
+            question: "\"தகனபலிக்கு ஆட்டுக்குட்டி எங்கே ?\" என்று கேட்டது யார்?",
+            options: ["ஆபிரகாம்", "ஈசாக்கு", "வேலைக்காரன்", "தேவன்"],
+            answer: 1
+        },
+        {
+            question: "ஆபிரகாம் போய், கடாவைப் பிடித்து, அதைத் தன் குமாரனுக்குப் பதிலாகத் தகனபலியிட்ட பின்பு, ஆபிரகாம் அந்த இடத்துக்கு ________ என்று பேரிட்டான்.",
+            options: ["பெனியேல்", "பெத்தேல்", "யெகோவா", "யேகோவாயீரே"],
+            answer: 3
+        },
+        {
+            question: "ஆண்டவரே, நீதியுள்ள ஜனங்களை அழிப்பீரோ? இது யாருடைய கூற்று?",
+            options: ["ஆபிராம்", "ஆபிரகாம்", "அபிமெலேக்கு", "லோத்து"],
+            answer: 2
+        },
+        {
+            question: "அபிமெலேக்கு ஆபிரகாமுக்கு எத்தனை வெள்ளிக்காசு கொடுத்தான்?",
+            options: ["100", "500", "1000", "5000"],
+            answer: 2
+        },
+        {
+            question: "பிள்ளை சாகிறதை நான் பார்க்கமாட்டேன் என்று, எதிராக அம்பு பாயும் தூரத்திலே போய் உட்கார்ந்து சத்தமிட்டு அழுதது யார்?",
+            options: ["சாராள்", "ஆகார்", "ஏவாள்", "ஆதாள்"],
+            answer: 1
+        },
+        {
+            question: "அபிமெலேக்கு ஆபிரகாமிடம் எத்தனை பெண்ணாட்டுக்குட்டிகளை சாட்சியாக வாங்கிக்கொள்ள வேண்டும் என்றான்?",
+            options: ["பத்து", "ஏழு", "பதினைந்து", "மூன்று"],
+            answer: 1
+        },
+        {
+            question: "ஈசாக்கு பிறந்தபோது ஆபிரகாம் எத்தனை வயதாயிருந்தான்.",
+            options: ["90", "95", "100", "110"],
+            answer: 2
+        },
+        {
+            question: "தேவன் என்னை நகைக்கப்பண்ணினார். இதைக் கேட்கிற யாவரும் என்னோடேகூட நகைப்பார்கள் என்றது யார்?",
+            options: ["ஆபிரகாம்", "ஈசாக்கு", "சாராள்", "இஸ்மவேல்"],
+            answer: 2
+        },
+        {
+            question: "இஸ்மவேலுடைய நுனித்தோலின் மாம்சம் விருத்தசேதனம்பண்ணப்படும்போது, அவன் எத்தனை வயதாயிருந்தான்.",
+            options: ["பத்து", "பதினைந்து", "பதிமூன்று", "பதினாறு"],
+            answer: 2
+        },
+        {
+            question: "ஆபிரகாம் நுனித்தோலின் மாம்சம் விருத்தசேதனம்பண்ணப்படும்போது, அவன் எத்தனை வயதாயிருந்தான்.",
+            options: ["தொன்னூறு", "நூற்றுபத்து", "நூறு", "தொன்னூற்றொன்பது"],
+            answer: 3
+        }
+    ];
+
+    // VARIABLES
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+    let participantName = "";
+    let resultSubmitted = false;
+
+    // HTML ELEMENTS
+    const registerSection = document.getElementById("register");
+    const registerForm = document.getElementById("register-form");
+    const nameInput = document.getElementById("participant-name");
+    const quizSection = document.getElementById("quiz");
+    const resultSection = document.getElementById("result");
+    const questionElement = document.getElementById("question");
+    const optionsElement = document.getElementById("options");
+    const countElement = document.getElementById("question-count");
+    const scoreElement = document.getElementById("score");
+    const feedbackElement = document.getElementById("feedback");
+    const progressBar = document.getElementById("progress-bar");
+    const nextButton = document.getElementById("next-btn");
+    const restartButton = document.getElementById("restart-btn");
+    const submissionStatus = document.getElementById("submission-status");
+
+    // REGISTRATION
+    registerForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        participantName = nameInput.value.trim();
+
+        if (!participantName) {
+            alert("Please enter your name.");
+            nameInput.focus();
+            return;
+        }
+
+        currentQuestion = 0;
+        score = 0;
+        answered = false;
+        resultSubmitted = false;
+        scoreElement.textContent = "Score: 0";
+
+        registerSection.classList.add("hidden");
+        resultSection.classList.add("hidden");
+        quizSection.classList.remove("hidden");
+
+        showQuestion();
+    });
+
+    // DISPLAY A QUESTION
+    function showQuestion() {
+        answered = false;
+        const current = questions[currentQuestion];
+
+        countElement.textContent =
+            `Question ${currentQuestion + 1} of ${questions.length}`;
+        questionElement.textContent = current.question;
+        optionsElement.innerHTML = "";
+        feedbackElement.textContent = "";
+        nextButton.disabled = true;
+
+        nextButton.textContent =
+            currentQuestion === questions.length - 1
+                ? "See Final Score"
+                : "Next Question";
+
+        progressBar.style.width =
+            `${(currentQuestion / questions.length) * 100}%`;
+
+        current.options.forEach(function(option, index) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "option";
+            button.textContent = String.fromCharCode(65 + index) + ". " + option;
+
+            button.addEventListener("click", function() {
+                selectAnswer(index, button);
+            });
+
+            optionsElement.appendChild(button);
+        });
+    }
+
+    // CHECK ANSWER
+    function selectAnswer(selectedIndex, selectedButton) {
+        if (answered) return;
+        answered = true;
+
+        const correctIndex = questions[currentQuestion].answer;
+        const allOptions = optionsElement.querySelectorAll(".option");
+
+        allOptions.forEach(function(button, index) {
+            button.disabled = true;
+            if (index === correctIndex) button.classList.add("correct");
+        });
+
+        if (selectedIndex === correctIndex) {
+            score++;
+            feedbackElement.textContent = "Correct! Well done!";
+            feedbackElement.style.color = "#15803d";
+        } else {
+            selectedButton.classList.add("wrong");
+            feedbackElement.textContent =
+                "Incorrect! Correct answer: " +
+                questions[currentQuestion].options[correctIndex];
+            feedbackElement.style.color = "#dc2626";
+        }
+
+        scoreElement.textContent = "Score: " + score;
+        nextButton.disabled = false;
+    }
+
+    // NEXT QUESTION
+    nextButton.addEventListener("click", function() {
+        if (!answered) return;
+
+        currentQuestion++;
+
+        if (currentQuestion < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    });
+
+    // HAPPY MODE OR SAD MODE
+    function showResultMode(finalScore, totalQuestions) {
+        const percentage = (finalScore / totalQuestions) * 100;
+        const resultMode = document.getElementById("resultMode");
+        const resultEmoji = document.getElementById("resultEmoji");
+        const resultTitle = document.getElementById("resultTitle");
+        const resultMessage = document.getElementById("resultMessage");
+
+        resultMode.hidden = false;
+        resultMode.classList.remove("happy-mode", "sad-mode");
+
+        if (percentage >= 70) {
+            resultMode.classList.add("happy-mode");
+            resultEmoji.textContent = "🥳🎉";
+            resultTitle.textContent = "Excellent!";
+            resultMessage.textContent =
+                "The horse is prepared for the day of battle, But deliverance is of the Lord. (Proverbs 21:31)";
+        } else {
+            resultMode.classList.add("sad-mode");
+            resultEmoji.textContent = "😢";
+            resultTitle.textContent = "Don't Give Up!";
+            resultMessage.textContent =
+                "Keep reading the Bible and practising. You can do even better next time!";
+        }
+    }
+
+    // SEND RESULT TO GOOGLE SHEETS
+    async function sendResultToGoogleSheets() {
+        if (
+            !SCRIPT_URL ||
+            SCRIPT_URL === "PASTE_YOUR_WEB_APP_URL_HERE"
+        ) {
+            submissionStatus.textContent =
+                "Results are not connected to Google Sheets yet. Add your Apps Script Web app URL to enable result collection.";
+            return;
+        }
+
+        const resultData = {
+            name: participantName,
+            score: score,
+            total: questions.length
+        };
+
+        submissionStatus.textContent = "Submitting your result...";
+
+        try {
+            // no-cors sends the request but does not let the browser read the response.
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify(resultData)
+            });
+
+            submissionStatus.textContent =
+                "Your result submission was sent. The browser cannot confirm whether the spreadsheet saved it.";
+        } catch (error) {
+            console.error("Result submission failed:", error);
+            submissionStatus.textContent =
+                "Could not send the result. Please check your internet connection or contact the quiz organiser.";
+        }
+    }
+
+    // SHOW FINAL SCORE
+    function showResult() {
+        quizSection.classList.add("hidden");
+        resultSection.classList.remove("hidden");
+        progressBar.style.width = "100%";
+
+        document.getElementById("final-score").textContent =
+            participantName + " — Your Score: " + score + " / " + questions.length;
+
+        const percentage = (score / questions.length) * 100;
+        let message;
+
+        if (percentage === 100) {
+            message = "Excellent! You answered every question correctly!";
+        } else if (percentage >= 70) {
+            message = "Great job! Keep learning!";
+        } else if (percentage >= 40) {
+            message = "Good effort! Practise and try again.";
+        } else {
+            message = "Keep practising. You can improve!";
+        }
+
+        document.getElementById("message").textContent =
+            message + " Percentage: " + percentage.toFixed(1) + "%";
+
+        showResultMode(score, questions.length);
+
+        if (!resultSubmitted) {
+            resultSubmitted = true;
+            sendResultToGoogleSheets();
+        }
+        saveQuizResult(
+            document.getElementById("participant-name").value.trim(),
+            score,
+            questions.length
+        );
+    }
+
+    // RESTART: ASK FOR THE NAME AGAIN
+    restartButton.addEventListener("click", function() {
+        currentQuestion = 0;
+        score = 0;
+        answered = false;
+        resultSubmitted = false;
+        participantName = "";
+
+        scoreElement.textContent = "Score: 0";
+        resultSection.classList.add("hidden");
+        quizSection.classList.add("hidden");
+        registerSection.classList.remove("hidden");
+
+        document.getElementById("resultMode").hidden = true;
+        nameInput.value = "";
+        submissionStatus.textContent = "";
+        nameInput.focus();
+    });
+</script>
+</body>
+</html>
